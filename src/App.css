@@ -1,0 +1,90 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Parkinsans:wght@300..800&family=Permanent+Marker&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Rubik:ital,wght@0,300..900;1,300..900&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Parkinsans:wght@300..800&family=Permanent+Marker&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Rubik:ital,wght@0,300..900;1,300..900&family=Special+Elite&display=swap');
+
+.center{
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  align-items: center;
+  background-color: bisque;
+  text-align: center;
+}
+
+.outer-form-box{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #384bb4;
+}
+.form-box{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0vw 5vw 0vw 5vw;
+  justify-content: center;
+  width: 100vw;
+  gap: 4vh;
+  min-height: 100vh;
+  
+  color: white;
+  background-color: #384bb4;
+}
+
+.image-box{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+  gap: 4vh;
+}
+
+.z-index-backdrop{
+z-index: 1;
+}
+
+.hero-image{
+  height: auto;
+  width: 50%;
+  animation: float 3s linear infinite;
+}
+
+@keyframes float{
+    0%{ transform : translateY(0px);}
+    50%{ transform : translateY(-20px);}
+    100%{ transform : translateY(0px);}
+}
+
+.title {
+  font-family: "Permanent Marker", cursive !important;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 50px !important;
+}
+
+
+.sub-title {
+  font-family: "Lexend Deca", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 20px;
+}
+
+.description-box {
+  font-family: "Lexend Deca", sans-serif !important;
+  font-optical-sizing: auto;
+  font-weight: 100;
+  font-style: normal;
+  font-size: 13px !important;
+  padding: 0vw 8vw 0vw 8vw;
+}
+
+.custom-textfield .MuiOutlinedInput-root {
+  background-color: white;
+}
+
+.custom-textfield-url .MuiOutlinedInput-root{
+  background-color: white;
+}
