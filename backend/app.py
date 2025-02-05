@@ -52,7 +52,7 @@ def create_code(original_url):
         #and blake2b takes key length in bytes so setting digest_size to 2 will give an output length of 4 characters
         shortened_url = hashlib.blake2b(str(original_url).encode(),key=os.getenv("SECRET_KEY").encode(), digest_size= 4).hexdigest()
         url_exists_in_db = collection.find_one({"shortened_url":shortened_url})
-        shortened_url="http://localhost:5000/"+shortened_url
+        shortened_url="https://urlsz.onrender.com/"+shortened_url
         collection.insert_one({"original_url":original_url,"shortened_url":shortened_url})
         return shortened_url
         
@@ -93,7 +93,7 @@ def shorten_url():
 @app.route("/<code>", methods=["GET","POST"])
 #@limiter.limit("10 per minute")
 def redirect_to_url(code):
-    original_url = code_to_url("http://localhost:5000/"+code)
+    original_url = code_to_url("https://urlsz.onrender.com/"+code)
     #print("Original URL:",original_url)
     if original_url =="INVALID URL":
         return f"<h1>{original_url}</h1>" , 200
