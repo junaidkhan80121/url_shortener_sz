@@ -49,7 +49,7 @@ function App() {
     else{
       setbackdropState(true);
     try {
-      var response = await axios.get("http://localhost:5000/generate", {
+      var response = await axios.get("https://urlsz.onrender.com/generate", {
         params: { url: Url },
       });
       //console.log(response.data.message);

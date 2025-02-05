@@ -5,8 +5,8 @@ from pymongo import MongoClient
 import re
 from dotenv import load_dotenv
 import os
-#from flask_limiter import Limiter
-#from flask_limiter.util import get_remote_address
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pymongo.server_api import ServerApi
 load_dotenv()
 
@@ -15,11 +15,11 @@ CORS(app)
 DB_PASS = os.getenv("DB_PASSKEY")
 MONGO_DB_URI = "mongodb+srv://khanjunaid80121:"+DB_PASS+"@cluster0.exfs3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
-#limiter = Limiter(
-#    get_remote_address,  # Rate limit by client IP address
-#    app=app,
-#    default_limits=["200 per day", "50 per hour"]
-#)
+limiter = Limiter(
+    get_remote_address,  # Rate limit by client IP address
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 
 def connect_to_db():
@@ -34,11 +34,8 @@ def connect_to_db():
 ## This method converts original url to shortened url
 def check_url(original_url):
     try:
-        print("1")
         collection = connect_to_db()
-        print("2")
         row = collection.find_one({"$or": [{"original_url": original_url}, {"shortened_url": original_url}]})
-        print("3")
         if row==None:
             return create_code(original_url)
         else:
@@ -66,11 +63,8 @@ def create_code(original_url):
 ##this method converts shortened url back to original URL
 def code_to_url(code):
     try:
-        print("1")
         collection = connect_to_db()
-        print("2")
         row = collection.find_one({"shortened_url":code})
-        print("3")
         if row==None:
             return "INVALID URL"
         else:
@@ -81,7 +75,7 @@ def code_to_url(code):
 
 
 @app.route("/generate",methods=["GET","POST"])
-#@limiter.limit("10 per minute")
+@limiter.limit("10 per minute")
 def shorten_url():
     original_url = request.args.get('url')
     if not original_url:
