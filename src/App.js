@@ -1,6 +1,10 @@
 import "./App.css";
 import {
   Box,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
   Container,
   TextField,
   Typography,
@@ -13,25 +17,29 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid2";
 import { ReactTyped } from "react-typed";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from '@mui/icons-material/Delete';
-import LinkIcon from '@mui/icons-material/Link';
+import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
 import DoneIcon from "@mui/icons-material/Done";
+//import ThemeProvider from "@mui/material";
 
 function App() {
   const [Url, setUrl] = useState("");
+  const [dialog, setDialog] = useState(true);
   const [ShortUrl, setShortUrl] = useState("");
   const [backdropState, setbackdropState] = useState(false);
   const [copied, setCopied] = useState(false);
 
-
   const copyToClipboard = async () => {
-    const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' });
-    if (permissionStatus.state === 'granted') {
-    await navigator.clipboard.writeText(ShortUrl);
-    //await navigator.clipboard.writeText(ShortUrl);
-    }
-    else {
-    alert('Clipboard access denied. Please allow clipboard access in your browser settings.'); 
+    const permissionStatus = await navigator.permissions.query({
+      name: "clipboard-write",
+    });
+    if (permissionStatus.state === "granted") {
+      await navigator.clipboard.writeText(ShortUrl);
+      //await navigator.clipboard.writeText(ShortUrl);
+    } else {
+      alert(
+        "Clipboard access denied. Please allow clipboard access in your browser settings."
+      );
     }
     setCopied(true);
     setTimeout(() => {
@@ -40,32 +48,58 @@ function App() {
     // clearTimeout(timeout)
   };
 
-
   const callBackend = useCallback(async () => {
-    if (Url===""){
-      alert("Please Enter an URL")
-      return
-    }
-    else{
+    if (Url === "") {
+      alert("Please Enter an URL");
+      return;
+    } else {
       setbackdropState(true);
-    try {
-      var response = await axios.get("https://urlsz.onrender.com/generate", {
-        params: { url: Url },
-      });
-      //console.log(response.data.message);
-      setShortUrl(response.data.message);
-      setbackdropState(false);
-    } catch (e) {
-      console.log(e);
-      console.log("Error: ", e.message);
-    }}
+      try {
+        var response = await axios.get("https://urlsz.onrender.com/generate", {
+          params: { url: Url },
+        });
+        //console.log(response.data.message);
+        setShortUrl(response.data.message);
+        setbackdropState(false);
+      } catch (e) {
+        console.log(e);
+        console.log("Error: ", e.message);
+      }
+    }
   }, [setbackdropState, Url, setShortUrl]);
 
   return (
     <>
+      <Dialog
+        open={dialog}
+        onClose={() => {
+          setDialog(false);
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h5">Please Note</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Due to hosting limitations, the app may take a little while to load for
+            the first time to become available. Thanks for your patience!
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              setDialog(false);
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Grid container spacing={0}>
         <Grid
-          size={{ md:6, lg: 6}}
+          size={{ md: 6, lg: 6 }}
           sx={{ display: { xs: "none", sm: "none", md: "block", lg: "block" } }}
         >
           <Container sx={{ minHeight: "100vh" }}>
@@ -92,13 +126,12 @@ function App() {
         <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6 }}>
           <Container className="outer-form-box">
             <Box className="form-box">
-            <Typography className="title">Sub-Zero</Typography>
+              <Typography className="title">Sub-Zero</Typography>
               <TextField
                 className="custom-textfield"
                 multiline
                 maxRows={5}
                 sx={{
-
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
                       borderColor: "white", // Default border color
@@ -131,26 +164,26 @@ function App() {
                 variant="contained"
                 color="success"
                 onClick={callBackend}
-                size='large'
-                endIcon={<LinkIcon/>}
+                size="large"
+                endIcon={<LinkIcon />}
               >
                 Get Shortened Url
               </Button>
               <Button
                 variant="contained"
                 color="warning"
-                size='large'
-                endIcon={<DeleteIcon/>}
+                size="large"
+                endIcon={<DeleteIcon />}
                 onClick={() => {
                   setUrl("");
-                  setShortUrl("")
+                  setShortUrl("");
                 }}
               >
                 &emsp;&emsp;Clear Fields&emsp;&emsp;
               </Button>
               <Typography sx={{}}>Shortened URL</Typography>
-              <Box sx={{ backgroundColor: "white",width:"100%" }}>
-                <Box sx={{ textAlign: "right"}}>
+              <Box sx={{ backgroundColor: "white", width: "100%" }}>
+                <Box sx={{ textAlign: "right" }}>
                   <Button sx={{ color: "gray" }} onClick={copyToClipboard}>
                     {copied ? (
                       <>
@@ -160,7 +193,10 @@ function App() {
                         </Typography>
                       </>
                     ) : (
-                      <><ContentCopyIcon sx={{ fontSize: "20px" }} /><Typography sx={{ fontSize: "12px" }}>Copy</Typography></>
+                      <>
+                        <ContentCopyIcon sx={{ fontSize: "20px" }} />
+                        <Typography sx={{ fontSize: "12px" }}>Copy</Typography>
+                      </>
                     )}
                   </Button>
                 </Box>
@@ -170,7 +206,6 @@ function App() {
                   maxRows={4}
                   value={ShortUrl}
                   className="custom-textfield"
-                                   
                 />
               </Box>
 
