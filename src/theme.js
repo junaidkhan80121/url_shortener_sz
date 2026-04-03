@@ -70,10 +70,13 @@ export function getAppTheme(mode) {
               : "0 12px 24px rgba(67, 88, 208, 0.18)",
           },
           contained: {
-            background: isDark
-              ? "linear-gradient(135deg, #8ddfff, #15c9f5)"
-              : "linear-gradient(135deg, #5467db, #3c50c4)",
+            backgroundColor: isDark ? "#39c7ef" : "#4358d0",
             color: isDark ? "#041016" : "#ffffff",
+            backgroundImage: "none",
+            "&:hover": {
+              backgroundColor: isDark ? "#2eb8e0" : "#384dbd",
+              backgroundImage: "none",
+            },
           },
         },
       },
