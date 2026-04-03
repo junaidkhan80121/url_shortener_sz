@@ -1,70 +1,70 @@
-# Getting Started with Create React App
+# Sub-Zero URL Shortener
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sub-Zero is a React + MUI frontend with a Flask backend for generating and resolving short URLs.
 
-## Available Scripts
+## Environment Setup
 
-In the project directory, you can run:
+Frontend:
 
-### `npm start`
+1. Copy `.env.example` to `.env`.
+2. Set `REACT_APP_API_BASE_URL` to your backend base URL.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Backend:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Copy `backend/.env.example` to `backend/.env`.
+2. Set `APP_BASE_URL` to the public base URL used in generated short links.
+3. Set `SECRET_KEY`.
+4. Set either `MONGO_URI` or the split Mongo values.
+5. Set `CORS_ALLOWED_ORIGINS` to the frontend origin.
 
-### `npm test`
+## Frontend Config
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Frontend env values are mapped in [env.js](/home/khan/Desktop/github_plots/url_shortener_sz/src/config/env.js).
 
-### `npm run build`
+- `REACT_APP_APP_NAME`
+- `REACT_APP_API_BASE_URL`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Backend Config
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Backend env values are mapped in [config.py](/home/khan/Desktop/github_plots/url_shortener_sz/backend/config.py).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- `APP_BASE_URL`
+- `SECRET_KEY`
+- `MONGO_URI`
+- `MONGO_USERNAME`
+- `MONGO_PASSWORD`
+- `MONGO_CLUSTER`
+- `MONGO_OPTIONS`
+- `MONGO_DATABASE_NAME`
+- `MONGO_COLLECTION_NAME`
+- `CORS_ALLOWED_ORIGINS`
+- `DEFAULT_RATE_LIMITS`
+- `SHORTEN_RATE_LIMIT`
 
-### `npm run eject`
+## Run Locally
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Frontend:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm install
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Backend:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
 
-## Learn More
+Default local URLs:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5000`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Build
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm run build
+```

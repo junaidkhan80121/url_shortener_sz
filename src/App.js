@@ -41,6 +41,7 @@ import {
   AccountCircleOutlined,
 } from "@mui/icons-material";
 import { getAppTheme } from "./theme";
+import { apiConfig, env } from "./config/env";
 
 const navItems = ["Dashboard", "Analytics"];
 
@@ -118,7 +119,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await axios.get("https://urlsz.onrender.com/generate", {
+      const response = await axios.get(apiConfig.generateShortUrl, {
         params: { url },
       });
       setShortUrl(response.data.message);
@@ -182,7 +183,7 @@ function App() {
                     color: isDark ? "#ffffff" : theme.palette.primary.main,
                   }}
                 >
-                  Sub-Zero
+                  {env.appName}
                 </Typography>
                 <Stack direction="row" spacing={4} sx={{ display: { xs: "none", md: "flex" } }}>
                   {navItems.map((item, index) => (
@@ -840,7 +841,7 @@ function App() {
                   color: isDark ? theme.palette.primary.main : "#2845c7",
                 }}
               >
-                Sub-Zero
+                {env.appName}
               </Typography>
               <Typography sx={{ mt: 1, color: "text.secondary", letterSpacing: "0.1em" }}>
                 © 2024 SUB-ZERO. HIGH-SPEED PRECISION.
