@@ -1,7 +1,8 @@
 # Sub-Zero URL Shortener
 
 Sub-Zero is a React + MUI frontend with a Flask backend for generating and resolving short URLs.
-The current Render setup is stateless and does not require MongoDB.
+The current Render setup does not require MongoDB.
+In "no DB" mode, short links are stored in-memory, so they will reset on redeploy/restart.
 
 ## Environment Setup
 
@@ -50,6 +51,7 @@ SECRET_KEY=replace-with-a-long-random-secret
 CORS_ALLOWED_ORIGINS=https://url-sz.onrender.com
 DEFAULT_RATE_LIMITS=200 per day,50 per hour
 SHORTEN_RATE_LIMIT=10 per minute
+SHORT_CODE_LENGTH=8
 ```
 
 ## Deploy On Render

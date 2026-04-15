@@ -1,9 +1,7 @@
-import base64
-import hashlib
-import hmac
 import os
 import re
-import zlib
+import secrets
+import threading
 
 from flask import Flask, jsonify, redirect, request
 from flask_cors import CORS
@@ -23,57 +21,46 @@ limiter = Limiter(
     default_limits=config.default_rate_limits,
 )
 
+_CODE_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+_DEFAULT_CODE_LENGTH = 8  # must be > 5 per requirement
+
+# No DB mode: keep mappings in memory.
+# Note: this means short links won't survive restarts and won't work across multiple workers/instances.
+_code_to_url = {}
+_url_to_code = {}
+_map_lock = threading.Lock()
+
 
 def build_short_url(short_code):
     return f"{config.app_base_url}/{short_code}"
 
 
-def _strip_padding(value):
-    return value.rstrip("=")
-
-
-def _restore_padding(value):
-    return value + ("=" * (-len(value) % 4))
-
-
 def create_code(original_url):
-    compressed_url = zlib.compress(original_url.encode("utf-8"), level=9)
-    encoded_payload = _strip_padding(
-        base64.urlsafe_b64encode(compressed_url).decode("ascii")
-    )
-    signature = hmac.new(
-        config.secret_key.encode("utf-8"),
-        encoded_payload.encode("ascii"),
-        hashlib.sha256,
-    ).digest()[:6]
-    encoded_signature = _strip_padding(
-        base64.urlsafe_b64encode(signature).decode("ascii")
-    )
-    return f"{encoded_signature}.{encoded_payload}"
+    code_length = int(os.getenv("SHORT_CODE_LENGTH", str(_DEFAULT_CODE_LENGTH)))
+    if code_length <= 5:
+        code_length = _DEFAULT_CODE_LENGTH
+
+    while True:
+        code = "".join(secrets.choice(_CODE_ALPHABET) for _ in range(code_length))
+        if code not in _code_to_url:
+            return code
 
 
 def check_url(original_url):
-    return build_short_url(create_code(original_url))
+    with _map_lock:
+        existing = _url_to_code.get(original_url)
+        if existing:
+            return build_short_url(existing)
+
+        code = create_code(original_url)
+        _code_to_url[code] = original_url
+        _url_to_code[original_url] = code
+        return build_short_url(code)
 
 
 def code_to_url(code):
-    try:
-        encoded_signature, encoded_payload = code.split(".", 1)
-        expected_signature = hmac.new(
-            config.secret_key.encode("utf-8"),
-            encoded_payload.encode("ascii"),
-            hashlib.sha256,
-        ).digest()[:6]
-        provided_signature = base64.urlsafe_b64decode(
-            _restore_padding(encoded_signature)
-        )
-        if not hmac.compare_digest(provided_signature, expected_signature):
-            return None
-
-        compressed_url = base64.urlsafe_b64decode(_restore_padding(encoded_payload))
-        return zlib.decompress(compressed_url).decode("utf-8")
-    except Exception:
-        return None
+    with _map_lock:
+        return _code_to_url.get(code)
 
 
 @app.route("/generate", methods=["GET", "POST"])
