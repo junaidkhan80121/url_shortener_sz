@@ -30,3 +30,10 @@ yarn-error.log*
 
 # python virtual environments
 /backend/venv/
+
+# python caches
+__pycache__/
+*.pyc
+
+# local tool markers
+.codex

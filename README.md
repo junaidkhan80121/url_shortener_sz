@@ -1,6 +1,7 @@
 # Sub-Zero URL Shortener
 
 Sub-Zero is a React + MUI frontend with a Flask backend for generating and resolving short URLs.
+The current Render setup is stateless and does not require MongoDB.
 
 ## Environment Setup
 
@@ -14,8 +15,7 @@ Backend:
 1. Copy `backend/.env.example` to `backend/.env`.
 2. Set `APP_BASE_URL` to the public base URL used in generated short links.
 3. Set `SECRET_KEY`.
-4. Set either `MONGO_URI` or the split Mongo values.
-5. Set `CORS_ALLOWED_ORIGINS` to the frontend origin.
+4. Set `CORS_ALLOWED_ORIGINS` to the frontend origin.
 
 ## Frontend Config
 
@@ -30,16 +30,43 @@ Backend env values are mapped in [config.py](/home/khan/Desktop/github_plots/url
 
 - `APP_BASE_URL`
 - `SECRET_KEY`
-- `MONGO_URI`
-- `MONGO_USERNAME`
-- `MONGO_PASSWORD`
-- `MONGO_CLUSTER`
-- `MONGO_OPTIONS`
-- `MONGO_DATABASE_NAME`
-- `MONGO_COLLECTION_NAME`
 - `CORS_ALLOWED_ORIGINS`
 - `DEFAULT_RATE_LIMITS`
 - `SHORTEN_RATE_LIMIT`
+
+## Render Values
+
+Frontend:
+
+```bash
+REACT_APP_API_BASE_URL=https://urlsz.onrender.com
+```
+
+Backend:
+
+```bash
+APP_BASE_URL=https://urlsz.onrender.com
+SECRET_KEY=replace-with-a-long-random-secret
+CORS_ALLOWED_ORIGINS=https://url-sz.onrender.com
+DEFAULT_RATE_LIMITS=200 per day,50 per hour
+SHORTEN_RATE_LIMIT=10 per minute
+```
+
+## Deploy On Render
+
+Backend (Web Service):
+
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn --bind 0.0.0.0:$PORT app:app`
+- Environment Variables: use the Backend values above
+
+Frontend (Static Site):
+
+- Root Directory: repo root
+- Build Command: `npm install && npm run build`
+- Publish Directory: `build`
+- Environment Variables: `REACT_APP_API_BASE_URL=https://urlsz.onrender.com`
 
 ## Run Locally
 

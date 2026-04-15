@@ -1,11 +1,15 @@
-from flask import Flask, jsonify, request, redirect
-from flask_cors import CORS
+import base64
 import hashlib
-from pymongo import MongoClient
+import hmac
+import os
 import re
+import zlib
+
+from flask import Flask, jsonify, redirect, request
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from pymongo.server_api import ServerApi
+
 from config import load_config
 
 config = load_config()
@@ -14,119 +18,90 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": config.cors_origins}})
 
 limiter = Limiter(
-    get_remote_address,  # Rate limit by client IP address
+    get_remote_address,
     app=app,
-    default_limits=config.default_rate_limits
+    default_limits=config.default_rate_limits,
 )
-
-
-def connect_to_db():
-    try:
-        client = MongoClient(config.mongo_uri, server_api=ServerApi("1"))
-        db = client[config.database_name]
-        collection = db[config.collection_name]
-        return collection
-    except Exception as e:
-        print("Error in connecting to database"+str(e))
 
 
 def build_short_url(short_code):
     return f"{config.app_base_url}/{short_code}"
 
 
-## This method converts original url to shortened url
-def check_url(original_url):
-    try:
-        collection = connect_to_db()
-        row = collection.find_one(
-            {"$or": [{"original_url": original_url}, {"shortened_url": original_url}]}
-        )
-        if row==None:
-            return create_code(original_url)
-        if row.get("short_code"):
-            return build_short_url(row["short_code"])
-        return row["shortened_url"]
-    except Exception as e:
-        print("Error in processing",e)
-        return "Error in processing"+str(e)
-    
-##this helper method generates a unique shortened code for every different url
-def create_code(original_url):
-    try:
-        collection = connect_to_db()
-        #hexdigest converts object to string
-        #and blake2b takes key length in bytes so setting digest_size to 2 will give an output length of 4 characters
-        short_code = hashlib.blake2b(
-            str(original_url).encode(),
-            key=config.secret_key.encode(),
-            digest_size=4,
-        ).hexdigest()
-        existing_row = collection.find_one(
-            {"$or": [{"short_code": short_code}, {"shortened_url": build_short_url(short_code)}]}
-        )
-        if existing_row:
-            return existing_row.get("shortened_url", build_short_url(short_code))
-        shortened_url = build_short_url(short_code)
-        collection.insert_one(
-            {
-                "original_url": original_url,
-                "short_code": short_code,
-                "shortened_url": shortened_url,
-            }
-        )
-        return shortened_url
-        
-    except Exception as e:
-        #print(e)
-        return "Error in executing query"
+def _strip_padding(value):
+    return value.rstrip("=")
 
-##this method converts shortened url back to original URL
+
+def _restore_padding(value):
+    return value + ("=" * (-len(value) % 4))
+
+
+def create_code(original_url):
+    compressed_url = zlib.compress(original_url.encode("utf-8"), level=9)
+    encoded_payload = _strip_padding(
+        base64.urlsafe_b64encode(compressed_url).decode("ascii")
+    )
+    signature = hmac.new(
+        config.secret_key.encode("utf-8"),
+        encoded_payload.encode("ascii"),
+        hashlib.sha256,
+    ).digest()[:6]
+    encoded_signature = _strip_padding(
+        base64.urlsafe_b64encode(signature).decode("ascii")
+    )
+    return f"{encoded_signature}.{encoded_payload}"
+
+
+def check_url(original_url):
+    return build_short_url(create_code(original_url))
+
+
 def code_to_url(code):
     try:
-        collection = connect_to_db()
-        row = collection.find_one(
-            {
-                "$or": [
-                    {"short_code": code},
-                    {"shortened_url": build_short_url(code)},
-                ]
-            }
+        encoded_signature, encoded_payload = code.split(".", 1)
+        expected_signature = hmac.new(
+            config.secret_key.encode("utf-8"),
+            encoded_payload.encode("ascii"),
+            hashlib.sha256,
+        ).digest()[:6]
+        provided_signature = base64.urlsafe_b64decode(
+            _restore_padding(encoded_signature)
         )
-        if row==None:
-            return "INVALID URL"
-        else:
-            return row['original_url']
-    except Exception as e:
-        return "Error in connecting database"+str(e)
-    
+        if not hmac.compare_digest(provided_signature, expected_signature):
+            return None
+
+        compressed_url = base64.urlsafe_b64decode(_restore_padding(encoded_payload))
+        return zlib.decompress(compressed_url).decode("utf-8")
+    except Exception:
+        return None
 
 
-@app.route("/generate",methods=["GET","POST"])
+@app.route("/generate", methods=["GET", "POST"])
 @limiter.limit(config.shorten_rate_limit)
 def shorten_url():
-    original_url = request.args.get('url')
+    original_url = request.args.get("url", "").strip()
     if not original_url:
-        return jsonify({"message":"Please Enter an URL"}), 200
-    if len(original_url)<20:
-        return jsonify({"message":"Link too short to be shortened"}), 200
-    pattern = r'^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$'
+        return jsonify({"message": "Please Enter an URL"}), 200
+    if len(original_url) < 20:
+        return jsonify({"message": "Link too short to be shortened"}), 200
+
+    pattern = r"^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$"
     match_pattern = re.match(pattern, original_url) is not None
     if match_pattern:
-        shortend_url = check_url(original_url)
-        return jsonify({"message":shortend_url}), 200
-    return jsonify({"message":"invalid URL"}), 200
+        shortened_url = check_url(original_url)
+        return jsonify({"message": shortened_url}), 200
+
+    return jsonify({"message": "invalid URL"}), 200
 
 
-@app.route("/<code>", methods=["GET","POST"])
-#@limiter.limit("10 per minute")
+@app.route("/<path:code>", methods=["GET", "POST"])
 def redirect_to_url(code):
     original_url = code_to_url(code)
-    #print("Original URL:",original_url)
-    if original_url =="INVALID URL":
-        return f"<h1>{original_url}</h1>" , 200
-    else:
-        return redirect(original_url)#,300
+    if not original_url:
+        return "<h1>INVALID URL</h1>", 404
+    return redirect(original_url)
 
 
-if __name__=='__main__':
-    app.run(debug=False)
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=False)
